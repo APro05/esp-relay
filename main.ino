@@ -3,12 +3,12 @@
 #include <HTTPClient.h>
 #include <UniversalTelegramBot.h>
 #include <time.h>
-#include <Ping.h> // Include the Ping library
+#include <ESP32Ping.h> // Include the Ping library
 
-#define WIFI_SSID     "Binik8"
-#define WIFI_PASSWORD "cucumber2pear"
-#define BOT_TOKEN     "Toekn"
-#define RELAY_PIN     26
+#define WIFI_SSID     "SSID"
+#define WIFI_PASSWORD "PASSWORD"
+#define BOT_TOKEN     "TOKEN"
+#define RELAY_PIN     13
 #define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
 
 WiFiClientSecure secured_client;
@@ -45,7 +45,9 @@ void handleNewMessages(int numNewMessages) {
     if (text == "/click") {
       bot.sendChatAction(chat_id, "typing");
       digitalWrite(RELAY_PIN, HIGH);
-      delay(500);
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+      digitalWrite(LED_PIN, LOW);
       digitalWrite(RELAY_PIN, LOW);
       bot.sendMessage(chat_id, "✅ Clicked (short press)");
     }
@@ -53,7 +55,9 @@ void handleNewMessages(int numNewMessages) {
     if (text == "/clicklong") {
       bot.sendChatAction(chat_id, "typing");
       digitalWrite(RELAY_PIN, HIGH);
-      delay(20000);
+      digitalWrite(LED_PIN, HIGH);
+      delay(10000);
+      digitalWrite(LED_PIN, LOW);
       digitalWrite(RELAY_PIN, LOW);
       bot.sendMessage(chat_id, "✅ Clicked (long press)");
     }
@@ -85,6 +89,22 @@ void handleNewMessages(int numNewMessages) {
       }
     }
 
+    if (text.startsWith("/clicklength ")) {
+  String lengthStr = text.substring(13);
+  int length = lengthStr.toInt();
+  if (length > 0) {
+    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
+    delay(length);
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(RELAY_PIN, LOW);
+    bot.sendMessage(chat_id, "✅ Clicked for " + String(length) + " ms");
+  } else {
+    bot.sendMessage(chat_id, "❌ Invalid duration. Use like this: /clicklength 1500");
+  }
+}
+
+
     if (text == "/uptime") {
       long uptime = millis() / 1000;
       String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
@@ -106,6 +126,7 @@ void handleNewMessages(int numNewMessages) {
         "🛠 Available Commands:\n"
         "/click - Short relay press\n"
         "/clicklong - Long relay press\n"
+        "/clicklength <ms>\n"
         "/ip - Show local & public IP\n"
         "/uptime - Show ESP32 uptime\n"
         "/pingpc - Ping 192.168.0.14\n"
@@ -121,9 +142,11 @@ void handleNewMessages(int numNewMessages) {
 void connectToWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(LED_PIN, HIGH); // Keep LED on during connection
     delay(500);
     Serial.print(".");
   }
+  digitalWrite(LED_PIN, LOW); // Turn off LED once connected
   Serial.println("\nWiFi connected");
   Serial.println(WiFi.localIP());
 }
@@ -149,7 +172,7 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT); // Initialize onboard LED pin
   digitalWrite(RELAY_PIN, LOW);
-  digitalWrite(LED_PIN, LOW); // Start with LED off
+  digitalWrite(LED_PIN, HIGH); // Start with LED off
 
   connectToWiFi();
 
