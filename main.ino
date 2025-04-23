@@ -60,6 +60,12 @@ void handleNewMessages(int numNewMessages) {
       String publicIP = getPublicIP();
       bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
     }
+
+    if (text == "/uptime") {
+      long uptime = millis() / 1000;
+      String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
+      bot.sendMessage(chat_id, "⏱ Uptime: " + upstr);
+    }
   }
 }
 
