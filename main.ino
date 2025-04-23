@@ -6,7 +6,7 @@
 #include <ESP32Ping.h> // Include the Ping library
 
 #define WIFI_SSID     "SSID"
-#define WIFI_PASSWORD "passwdf"
+#define WIFI_PASSWORD "PASSWD"
 #define BOT_TOKEN     "TOKEN"
 #define RELAY_PIN     13
 #define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
@@ -19,9 +19,14 @@ const unsigned long BOT_MTBS = 1000;
 unsigned long last_status_time = 0;
 const unsigned long STATUS_INTERVAL = 12UL * 60UL * 60UL * 1000UL; // 12 hours in ms
 bool commandsLocked = false;
+bool awaitingPassword = false;
+String passwordRequestFrom = "";
 
 
-const String unlockPassword = "password";  // change this to your desired password
+
+// change this to your desired password -----------------------------
+const String unlockPassword = "Password"; 
+// change this to your desired password -----------------------------
 
 
 String my_chat_id = ""; // Will be set from the first command received
@@ -47,22 +52,32 @@ void handleNewMessages(int numNewMessages) {
       my_chat_id = chat_id; // Save chat ID on first interaction
     }
 
-    if (commandsLocked && text == "/lockcmds") {
-      commandsLocked = false;
-      bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
-      return;
-    }
+if (text == "/lockcmds") {
+  commandsLocked = false;
+  awaitingPassword = false; // cancel any pending unlock attempt
+  bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
+  return;
+}
 
-    if (text.startsWith("/unlockcmds ")) {
-      String inputPass = text.substring(12);
-      if (inputPass == unlockPassword) {
-        commandsLocked = true;
-        bot.sendMessage(chat_id, "🔓 Commands *unlocked* successfully.", "Markdown");
-      } else {
-        bot.sendMessage(chat_id, "❌ Incorrect password.");
-      }
-      return;
-    }
+
+if (text == "/unlockcmds") {
+  awaitingPassword = true;
+  passwordRequestFrom = chat_id;
+  bot.sendMessage(chat_id, "🔑 Send your password now to unlock commands.");
+  return;
+}
+
+if (awaitingPassword && chat_id == passwordRequestFrom) {
+  awaitingPassword = false;
+  if (text == unlockPassword) {
+    commandsLocked = true;
+    bot.sendMessage(chat_id, "✅ Commands *unlocked* successfully.", "Markdown");
+  } else {
+    bot.sendMessage(chat_id, "❌ Incorrect password. Commands remain locked.");
+  }
+  return;
+}
+
     
     if (commandsLocked && text == "/click") {
       bot.sendChatAction(chat_id, "typing");
