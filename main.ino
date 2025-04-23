@@ -101,6 +101,20 @@ void handleNewMessages(int numNewMessages) {
       }
       bot.sendMessage(chat_id, "⚡ Onboard LED flashed!");
     }
+        if (text == "/help") {
+      String helpText = 
+        "🛠 Available Commands:\n"
+        "/click - Short relay press\n"
+        "/clicklong - Long relay press\n"
+        "/ip - Show local & public IP\n"
+        "/uptime - Show ESP32 uptime\n"
+        "/pingpc - Ping 192.168.0.14\n"
+        "/pingip <ip> - Ping user IP\n"
+        "/flash - Flash onboard LED\n"
+        "/help - Show this message";
+      bot.sendMessage(chat_id, helpText);
+    }
+
   }
 }
 
