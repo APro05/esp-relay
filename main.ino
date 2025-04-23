@@ -3,6 +3,7 @@
 #include <HTTPClient.h>
 #include <UniversalTelegramBot.h>
 #include <time.h>
+#include <Ping.h> // Include the Ping library
 
 #define WIFI_SSID     "Binik8"
 #define WIFI_PASSWORD "cucumber2pear"
@@ -59,6 +60,28 @@ void handleNewMessages(int numNewMessages) {
     if (text == "/ip") {
       String publicIP = getPublicIP();
       bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
+    }
+
+    if (text == "/pingpc") {
+      // Ping the default PC IP (192.168.0.14)
+      String pc_ip = "192.168.0.14";
+      int pingResult = Ping.ping(pc_ip.c_str());
+      if (pingResult >= 0) {
+        bot.sendMessage(chat_id, "✅ Ping to " + pc_ip + " successful: " + String(pingResult) + " ms");
+      } else {
+        bot.sendMessage(chat_id, "❌ Ping to " + pc_ip + " failed.");
+      }
+    }
+
+    if (text.startsWith("/pingip ")) {
+      // Ping a user-defined IP address
+      String ipAddress = text.substring(8); // Get the IP address from the command
+      int pingResult = Ping.ping(ipAddress.c_str());
+      if (pingResult >= 0) {
+        bot.sendMessage(chat_id, "✅ Ping to " + ipAddress + " successful: " + String(pingResult) + " ms");
+      } else {
+        bot.sendMessage(chat_id, "❌ Ping to " + ipAddress + " failed.");
+      }
     }
 
     if (text == "/uptime") {
