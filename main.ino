@@ -18,6 +18,8 @@ unsigned long bot_lasttime = 0;
 const unsigned long BOT_MTBS = 1000;
 unsigned long last_status_time = 0;
 const unsigned long STATUS_INTERVAL = 12UL * 60UL * 60UL * 1000UL; // 12 hours in ms
+bool commandsLocked = false;
+const String unlockPassword = "1234";  // change this to your desired password
 
 String my_chat_id = ""; // Will be set from the first command received
 
@@ -42,7 +44,24 @@ void handleNewMessages(int numNewMessages) {
       my_chat_id = chat_id; // Save chat ID on first interaction
     }
 
-    if (text == "/click") {
+    if (commandsLocked && text == "/lockcmds") {
+      commandsLocked = true;
+      bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
+      return;
+    }
+
+    if (text.startsWith("/unlockcmds ")) {
+      String inputPass = text.substring(12);
+      if (inputPass == unlockPassword) {
+        commandsLocked = false;
+        bot.sendMessage(chat_id, "🔓 Commands *unlocked* successfully.", "Markdown");
+      } else {
+        bot.sendMessage(chat_id, "❌ Incorrect password.");
+      }
+      return;
+    }
+    
+    if (commandsLocked && text == "/click") {
       bot.sendChatAction(chat_id, "typing");
       digitalWrite(RELAY_PIN, HIGH);
       digitalWrite(LED_PIN, HIGH);
@@ -52,7 +71,7 @@ void handleNewMessages(int numNewMessages) {
       bot.sendMessage(chat_id, "✅ Clicked (short press)");
     }
 
-    if (text == "/clicklong") {
+    if (commandsLocked && text == "/clicklong") {
       bot.sendChatAction(chat_id, "typing");
       digitalWrite(RELAY_PIN, HIGH);
       digitalWrite(LED_PIN, HIGH);
@@ -62,12 +81,12 @@ void handleNewMessages(int numNewMessages) {
       bot.sendMessage(chat_id, "✅ Clicked (long press)");
     }
 
-    if (text == "/ip") {
+    if (commandsLocked && text == "/ip") {
       String publicIP = getPublicIP();
       bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
     }
 
-    if (text == "/pingpc") {
+    if (commandsLocked && text == "/pingpc") {
       // Ping the default PC IP (192.168.0.14)
       String pc_ip = "192.168.0.14";
       int pingResult = Ping.ping(pc_ip.c_str());
@@ -78,7 +97,7 @@ void handleNewMessages(int numNewMessages) {
       }
     }
 
-    if (text.startsWith("/pingip ")) {
+    if (commandsLocked && text.startsWith("/pingip ")) {
       // Ping a user-defined IP address
       String ipAddress = text.substring(8); // Get the IP address from the command
       int pingResult = Ping.ping(ipAddress.c_str());
@@ -89,7 +108,7 @@ void handleNewMessages(int numNewMessages) {
       }
     }
 
-    if (text.startsWith("/clicklength ")) {
+    if (commandsLocked && text.startsWith("/clicklength ")) {
   String lengthStr = text.substring(13);
   int length = lengthStr.toInt();
   if (length > 0) {
@@ -105,13 +124,13 @@ void handleNewMessages(int numNewMessages) {
 }
 
 
-    if (text == "/uptime") {
+    if (commandsLocked && text == "/uptime") {
       long uptime = millis() / 1000;
       String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
       bot.sendMessage(chat_id, "⏱ Uptime: " + upstr);
     }
 
-    if (text == "/flash") {
+    if (commandsLocked && text == "/flash") {
       // Flash the onboard LED
       for (int i = 0; i < 5; i++) {
         digitalWrite(LED_PIN, HIGH);
