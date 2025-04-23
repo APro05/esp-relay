@@ -6,7 +6,7 @@
 
 #define WIFI_SSID     "Binik8"
 #define WIFI_PASSWORD "cucumber2pear"
-#define BOT_TOKEN     "6141320874:AAG2JH73vf0jEwKNpiAKbjKRUnP_HgCJcjs"
+#define BOT_TOKEN     "TOKEN"
 #define RELAY_PIN     26
 
 WiFiClientSecure secured_client;
