@@ -6,7 +6,7 @@
 #include <ESP32Ping.h> // Include the Ping library
 
 #define WIFI_SSID     "SSID"
-#define WIFI_PASSWORD "PASSWORD"
+#define WIFI_PASSWORD "passwdf"
 #define BOT_TOKEN     "TOKEN"
 #define RELAY_PIN     13
 #define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
@@ -19,7 +19,10 @@ const unsigned long BOT_MTBS = 1000;
 unsigned long last_status_time = 0;
 const unsigned long STATUS_INTERVAL = 12UL * 60UL * 60UL * 1000UL; // 12 hours in ms
 bool commandsLocked = false;
-const String unlockPassword = "1234";  // change this to your desired password
+
+
+const String unlockPassword = "password";  // change this to your desired password
+
 
 String my_chat_id = ""; // Will be set from the first command received
 
@@ -45,7 +48,7 @@ void handleNewMessages(int numNewMessages) {
     }
 
     if (commandsLocked && text == "/lockcmds") {
-      commandsLocked = true;
+      commandsLocked = false;
       bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
       return;
     }
@@ -53,7 +56,7 @@ void handleNewMessages(int numNewMessages) {
     if (text.startsWith("/unlockcmds ")) {
       String inputPass = text.substring(12);
       if (inputPass == unlockPassword) {
-        commandsLocked = false;
+        commandsLocked = true;
         bot.sendMessage(chat_id, "🔓 Commands *unlocked* successfully.", "Markdown");
       } else {
         bot.sendMessage(chat_id, "❌ Incorrect password.");
@@ -151,7 +154,9 @@ void handleNewMessages(int numNewMessages) {
         "/pingpc - Ping 192.168.0.14\n"
         "/pingip <ip> - Ping user IP\n"
         "/flash - Flash onboard LED\n"
-        "/help - Show this message";
+        "/help - Show this message\n"
+        "/unlockcmds\n"
+        "/lockcmds";
       bot.sendMessage(chat_id, helpText);
     }
 
