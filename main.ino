@@ -7,7 +7,7 @@
 
 #define WIFI_SSID     "Binik8"
 #define WIFI_PASSWORD "cucumber2pear"
-#define BOT_TOKEN     "x"
+#define BOT_TOKEN     "Toekn"
 #define RELAY_PIN     26
 #define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
 
