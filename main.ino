@@ -7,8 +7,9 @@
 
 #define WIFI_SSID     "Binik8"
 #define WIFI_PASSWORD "cucumber2pear"
-#define BOT_TOKEN     "TOKEN"
+#define BOT_TOKEN     "x"
 #define RELAY_PIN     26
+#define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
 
 WiFiClientSecure secured_client;
 UniversalTelegramBot bot(BOT_TOKEN, secured_client);
@@ -89,6 +90,17 @@ void handleNewMessages(int numNewMessages) {
       String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
       bot.sendMessage(chat_id, "⏱ Uptime: " + upstr);
     }
+
+    if (text == "/flash") {
+      // Flash the onboard LED
+      for (int i = 0; i < 5; i++) {
+        digitalWrite(LED_PIN, HIGH);
+        delay(200);
+        digitalWrite(LED_PIN, LOW);
+        delay(200);
+      }
+      bot.sendMessage(chat_id, "⚡ Onboard LED flashed!");
+    }
   }
 }
 
@@ -109,10 +121,21 @@ void sendStatus() {
   }
 }
 
+void handleLED() {
+  // If not connected to WiFi, turn the LED on at max brightness
+  if (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(LED_PIN, HIGH);  // LED on
+  } else {
+    digitalWrite(LED_PIN, LOW);   // LED off
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT); // Initialize onboard LED pin
   digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(LED_PIN, LOW); // Start with LED off
 
   connectToWiFi();
 
@@ -135,6 +158,9 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     connectToWiFi();
   }
+
+  // Check and handle LED behavior based on WiFi status
+  handleLED();
 
   if (millis() - bot_lasttime > BOT_MTBS) {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
