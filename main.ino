@@ -45,7 +45,10 @@ String getPublicIP() {
 
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
+    if (i >= bot.messages.size()) continue; // Avoid OOB access
     String chat_id = bot.messages[i].chat_id;
+    if (chat_id == "") continue; // Skip empty messages
+
     String text = bot.messages[i].text;
 
     if (my_chat_id == "") {
@@ -185,6 +188,8 @@ void connectToWiFi() {
     delay(500);
     Serial.print(".");
   }
+
+  bot.sendMessage(chat_id, "started wifi");
   digitalWrite(LED_PIN, LOW); // Turn off LED once connected
   Serial.println("\nWiFi connected");
   Serial.println(WiFi.localIP());
@@ -238,14 +243,13 @@ void loop() {
   // Check and handle LED behavior based on WiFi status
   handleLED();
 
-  if (millis() - bot_lasttime > BOT_MTBS) {
-    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    while (numNewMessages) {
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    }
-    bot_lasttime = millis();
-  }
+int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+while (numNewMessages > 0) {
+  handleNewMessages(numNewMessages);
+  delay(100); // avoid hammering
+  numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+}
+
 
   if (millis() - last_status_time > STATUS_INTERVAL) {
     sendStatus();
