@@ -151,6 +151,11 @@ void handleNewMessages(int numNewMessages) {
         }
         bot.sendMessage(chat_id, "⚡ Onboard LED flashed!");
         recognizedCommand = true;
+      } else if (commandsLocked && text == "/reboot") {
+          bot.sendMessage(chat_id, "♻️ *Rebooting ESP32...*", "Markdown");
+          delay(500);
+          ESP.restart();
+          recognized = true;
       }
     }
 
@@ -167,7 +172,8 @@ void handleNewMessages(int numNewMessages) {
         "/flash - Flash onboard LED\n"
         "/help - Show this message\n"
         "/unlockcmds\n"
-        "/lockcmds";
+        "/lockcmds\n"
+        "/reboot";
       bot.sendMessage(chat_id, helpText);
       recognizedCommand = true;
     }
