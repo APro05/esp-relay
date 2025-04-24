@@ -46,129 +46,115 @@ String getPublicIP() {
 
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
-    if (i >= bot.messages.size()) continue; // Avoid OOB access
+    if (i >= bot.messages.size()) continue;
     String chat_id = bot.messages[i].chat_id;
-    if (chat_id == "") continue; // Skip empty messages
+    if (chat_id == "") continue;
 
     String text = bot.messages[i].text;
+    bool recognizedCommand = false;
 
     if (my_chat_id == "") {
-      my_chat_id = chat_id; // Save chat ID on first interaction
+      my_chat_id = chat_id;
     }
 
-if (text == "/lockcmds") {
-  commandsLocked = false;
-  awaitingPassword = false; // cancel any pending unlock attempt
-  bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
-  return;
-}
-
-
-if (text == "/unlockcmds") {
-  awaitingPassword = true;
-  passwordRequestFrom = chat_id;
-  bot.sendMessage(chat_id, "🔑 Send your password now to unlock commands.");
-  return;
-}
-
-if (awaitingPassword && chat_id == passwordRequestFrom) {
-  awaitingPassword = false;
-  if (text == unlockPassword) {
-    commandsLocked = true;
-    bot.sendMessage(chat_id, "✅ Commands *unlocked* successfully.", "Markdown");
-  } else {
-    bot.sendMessage(chat_id, "❌ Incorrect password. Commands remain locked.");
-  }
-  return;
-}
-
-    
-    if (commandsLocked && text == "/click") {
-      bot.sendChatAction(chat_id, "typing");
-      digitalWrite(RELAY_PIN, HIGH);
-      digitalWrite(LED_PIN, HIGH);
-      delay(200);
-      digitalWrite(LED_PIN, LOW);
-      digitalWrite(RELAY_PIN, LOW);
-      bot.sendMessage(chat_id, "✅ Clicked (short press)");
-    }
-
-    if (commandsLocked && text == "/clicklong") {
-      bot.sendChatAction(chat_id, "typing");
-      digitalWrite(RELAY_PIN, HIGH);
-      digitalWrite(LED_PIN, HIGH);
-      delay(10000);
-      digitalWrite(LED_PIN, LOW);
-      digitalWrite(RELAY_PIN, LOW);
-      bot.sendMessage(chat_id, "✅ Clicked (long press)");
-    }
-
-    if (commandsLocked && text == "/ip") {
-      String publicIP = getPublicIP();
-      bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
-    }
-
-    if (pinging && commandsLocked && text == "/pingpc") {
-      pinging = false;
-      // Ping the default PC IP (192.168.0.14)
-      String pc_ip = "192.168.0.14";
-      int pingResult = Ping.ping(pc_ip.c_str());
-      if (pingResult >= 0) {
-        bot.sendMessage(chat_id, "✅ Ping to " + pc_ip + " successful: " + String(pingResult) + " ms");
-        pinging = true;
+    if (text == "/lockcmds") {
+      commandsLocked = false;
+      awaitingPassword = false;
+      bot.sendMessage(chat_id, "🔒 Commands have been *locked*.", "Markdown");
+      recognizedCommand = true;
+    } else if (text == "/unlockcmds") {
+      awaitingPassword = true;
+      passwordRequestFrom = chat_id;
+      bot.sendMessage(chat_id, "🔑 Send your password now to unlock commands.");
+      recognizedCommand = true;
+    } else if (awaitingPassword && chat_id == passwordRequestFrom) {
+      awaitingPassword = false;
+      if (text == unlockPassword) {
+        commandsLocked = true;
+        bot.sendMessage(chat_id, "✅ Commands *unlocked* successfully.", "Markdown");
       } else {
-        bot.sendMessage(chat_id, "❌ Ping to " + pc_ip + " failed.");
-        pinging = true;
+        bot.sendMessage(chat_id, "❌ Incorrect password. Commands remain locked.");
       }
+      recognizedCommand = true;
     }
 
-    if (pinging && commandsLocked && text.startsWith("/pingip ")) {
-      pinging = false;
-      // Ping a user-defined IP address
-      String ipAddress = text.substring(8); // Get the IP address from the command
-      int pingResult = Ping.ping(ipAddress.c_str());
-      if (pingResult >= 0) {
-        bot.sendMessage(chat_id, "✅ Ping to " + ipAddress + " successful: " + String(pingResult) + " ms");
-        pinging = true;
-      } else {
-        bot.sendMessage(chat_id, "❌ Ping to " + ipAddress + " failed.");
-        pinging = true;
-      }
-    }
-
-    if (commandsLocked && text.startsWith("/clicklength ")) {
-  String lengthStr = text.substring(13);
-  int length = lengthStr.toInt();
-  if (length > 0) {
-    digitalWrite(RELAY_PIN, HIGH);
-    digitalWrite(LED_PIN, HIGH);
-    delay(length);
-    digitalWrite(LED_PIN, LOW);
-    digitalWrite(RELAY_PIN, LOW);
-    bot.sendMessage(chat_id, "✅ Clicked for " + String(length) + " ms");
-  } else {
-    bot.sendMessage(chat_id, "❌ Invalid duration. Use like this: /clicklength 1500");
-  }
-}
-
-
-    if (commandsLocked && text == "/uptime") {
-      long uptime = millis() / 1000;
-      String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
-      bot.sendMessage(chat_id, "⏱ Uptime: " + upstr);
-    }
-
-    if (commandsLocked && text == "/flash") {
-      // Flash the onboard LED
-      for (int i = 0; i < 5; i++) {
+    // Only proceed with command handling if commands are unlocked
+    if (commandsLocked) {
+      if (text == "/click") {
+        bot.sendChatAction(chat_id, "typing");
+        digitalWrite(RELAY_PIN, HIGH);
         digitalWrite(LED_PIN, HIGH);
         delay(200);
         digitalWrite(LED_PIN, LOW);
-        delay(200);
+        digitalWrite(RELAY_PIN, LOW);
+        bot.sendMessage(chat_id, "✅ Clicked (short press)");
+        recognizedCommand = true;
+      } else if (text == "/clicklong") {
+        bot.sendChatAction(chat_id, "typing");
+        digitalWrite(RELAY_PIN, HIGH);
+        digitalWrite(LED_PIN, HIGH);
+        delay(10000);
+        digitalWrite(LED_PIN, LOW);
+        digitalWrite(RELAY_PIN, LOW);
+        bot.sendMessage(chat_id, "✅ Clicked (long press)");
+        recognizedCommand = true;
+      } else if (text == "/ip") {
+        String publicIP = getPublicIP();
+        bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
+        recognizedCommand = true;
+      } else if (pinging && text == "/pingpc") {
+        pinging = false;
+        int pingResult = Ping.ping("192.168.0.14");
+        if (pingResult >= 0) {
+          bot.sendMessage(chat_id, "✅ Ping successful: " + String(pingResult) + " ms");
+        } else {
+          bot.sendMessage(chat_id, "❌ Ping failed.");
+        }
+        pinging = true;
+        recognizedCommand = true;
+      } else if (pinging && text.startsWith("/pingip ")) {
+        pinging = false;
+        String ipAddress = text.substring(8);
+        int pingResult = Ping.ping(ipAddress.c_str());
+        if (pingResult >= 0) {
+          bot.sendMessage(chat_id, "✅ Ping to " + ipAddress + " successful: " + String(pingResult) + " ms");
+        } else {
+          bot.sendMessage(chat_id, "❌ Ping to " + ipAddress + " failed.");
+        }
+        pinging = true;
+        recognizedCommand = true;
+      } else if (text.startsWith("/clicklength ")) {
+        String lengthStr = text.substring(13);
+        int length = lengthStr.toInt();
+        if (length > 0) {
+          digitalWrite(RELAY_PIN, HIGH);
+          digitalWrite(LED_PIN, HIGH);
+          delay(length);
+          digitalWrite(LED_PIN, LOW);
+          digitalWrite(RELAY_PIN, LOW);
+          bot.sendMessage(chat_id, "✅ Clicked for " + String(length) + " ms");
+        } else {
+          bot.sendMessage(chat_id, "❌ Invalid duration. Use like this: /clicklength 1500");
+        }
+        recognizedCommand = true;
+      } else if (text == "/uptime") {
+        long uptime = millis() / 1000;
+        String upstr = String(uptime / 3600) + "h " + String((uptime % 3600) / 60) + "m";
+        bot.sendMessage(chat_id, "⏱ Uptime: " + upstr);
+        recognizedCommand = true;
+      } else if (text == "/flash") {
+        for (int i = 0; i < 5; i++) {
+          digitalWrite(LED_PIN, HIGH);
+          delay(200);
+          digitalWrite(LED_PIN, LOW);
+          delay(200);
+        }
+        bot.sendMessage(chat_id, "⚡ Onboard LED flashed!");
+        recognizedCommand = true;
       }
-      bot.sendMessage(chat_id, "⚡ Onboard LED flashed!");
     }
-        if (text == "/help") {
+
+    if (text == "/help") {
       String helpText = 
         "🛠 Available Commands:\n"
         "/click - Short relay press\n"
@@ -183,10 +169,15 @@ if (awaitingPassword && chat_id == passwordRequestFrom) {
         "/unlockcmds\n"
         "/lockcmds";
       bot.sendMessage(chat_id, helpText);
+      recognizedCommand = true;
     }
 
+    if (!recognizedCommand) {
+      bot.sendMessage(chat_id, "❓ Unknown command: `" + text + "`\nSend /help to see available commands.", "Markdown");
+    }
   }
 }
+
 
 void connectToWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
