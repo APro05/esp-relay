@@ -19,6 +19,7 @@ const unsigned long BOT_MTBS = 1000;
 unsigned long last_status_time = 0;
 const unsigned long STATUS_INTERVAL = 12UL * 60UL * 60UL * 1000UL; // 12 hours in ms
 bool commandsLocked = false;
+bool pinging = true;
 bool awaitingPassword = false;
 String passwordRequestFrom = "";
 
@@ -107,25 +108,31 @@ if (awaitingPassword && chat_id == passwordRequestFrom) {
       bot.sendMessage(chat_id, "📡 Local IP: " + WiFi.localIP().toString() + "\n🌍 Public IP: " + publicIP);
     }
 
-    if (commandsLocked && text == "/pingpc") {
+    if (pinging && commandsLocked && text == "/pingpc") {
+      pinging = false;
       // Ping the default PC IP (192.168.0.14)
       String pc_ip = "192.168.0.14";
       int pingResult = Ping.ping(pc_ip.c_str());
       if (pingResult >= 0) {
         bot.sendMessage(chat_id, "✅ Ping to " + pc_ip + " successful: " + String(pingResult) + " ms");
+        pinging = true;
       } else {
         bot.sendMessage(chat_id, "❌ Ping to " + pc_ip + " failed.");
+        pinging = true;
       }
     }
 
-    if (commandsLocked && text.startsWith("/pingip ")) {
+    if (pinging && commandsLocked && text.startsWith("/pingip ")) {
+      pinging = false;
       // Ping a user-defined IP address
       String ipAddress = text.substring(8); // Get the IP address from the command
       int pingResult = Ping.ping(ipAddress.c_str());
       if (pingResult >= 0) {
         bot.sendMessage(chat_id, "✅ Ping to " + ipAddress + " successful: " + String(pingResult) + " ms");
+        pinging = true;
       } else {
         bot.sendMessage(chat_id, "❌ Ping to " + ipAddress + " failed.");
+        pinging = true;
       }
     }
 
