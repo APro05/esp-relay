@@ -6,7 +6,7 @@
 #include <ESP32Ping.h> // Include the Ping library
 
 #define WIFI_SSID     "SSID"
-#define WIFI_PASSWORD "PASSWD"
+#define WIFI_PASSWORD "Password"
 #define BOT_TOKEN     "TOKEN"
 #define RELAY_PIN     13
 #define LED_PIN       2   // Onboard LED pin (usually pin 2 on ESP32)
@@ -25,12 +25,14 @@ String passwordRequestFrom = "";
 
 
 
+
 // change this to your desired password -----------------------------
-const String unlockPassword = "Password"; 
+const String unlockPassword = "PASWORDDDDDDDDDDDDDD"; 
 // change this to your desired password -----------------------------
 
 
 String my_chat_id = ""; // Will be set from the first command received
+String hat_id = "";
 
 String getPublicIP() {
   HTTPClient http;
@@ -46,12 +48,14 @@ String getPublicIP() {
 
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
-    if (i >= bot.messages.size()) continue;
+    if (i >= numNewMessages) continue;
     String chat_id = bot.messages[i].chat_id;
     if (chat_id == "") continue;
 
     String text = bot.messages[i].text;
     bool recognizedCommand = false;
+    bool recognized = false;
+
 
     if (my_chat_id == "") {
       my_chat_id = chat_id;
@@ -193,7 +197,7 @@ void connectToWiFi() {
     Serial.print(".");
   }
 
-  bot.sendMessage(chat_id, "started wifi");
+  bot.sendMessage(my_chat_id, "started wifi");
   digitalWrite(LED_PIN, LOW); // Turn off LED once connected
   Serial.println("\nWiFi connected");
   Serial.println(WiFi.localIP());
